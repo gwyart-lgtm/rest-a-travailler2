@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8"><meta name="description" content="Calcule le reste à travailler et l'heure de fin depuis un horodateur en centièmes.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<title>Reste à travailler</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.wrap{max-width:620px;margin:auto;padding:24px}.tag{color:#1d4ed8;font-weight:700}h1{font-size:30px;margin:7px 0}.sub{color:#64748b;line-height:1.45}.card{background:#fff;border-radius:20px;padding:22px;margin-top:18px;box-shadow:0 8px 26px #0f172a12}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}label{display:block;font-weight:600;margin-bottom:7px}input{width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;font-size:20px}.hint{color:#64748b;font-size:12px;margin-top:6px}.wide{grid-column:1/-1}.timeRow{display:flex;gap:12px;align-items:center}.timeRow input{max-width:280px}.refresh{height:50px;border:0;border-radius:12px;padding:0 18px;background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:15px;cursor:pointer}.refresh:hover{background:#dbeafe}.result{background:#1d4ed8;color:#fff}.soft{color:#dbeafe}.big{font-size:44px;font-weight:800;margin:5px 0}.finish{border-top:1px solid #ffffff33;margin-top:20px;padding-top:18px}.finish b{font-size:30px}.bar{height:11px;background:#1e3a8a;border-radius:99px;overflow:hidden;margin-top:20px}.bar>div{height:100%;background:#fff;transition:width .2s}.note{background:#fffbeb;color:#78350f;border-radius:16px;padding:14px;margin-top:18px;font-size:14px}.done{font-size:25px;font-weight:800}@media(max-width:520px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.big{font-size:38px}.timeRow{align-items:stretch;flex-direction:column}.timeRow input{max-width:none}}
+</style></head><body><main class="wrap">
+<div class="tag">◷ Horodateur en centièmes</div><h1>Mon reste à travailler</h1><p class="sub">Saisis les valeurs de ton horodateur. Le bouton Actualiser récupère l'heure actuelle et recalcule immédiatement ton heure de fin.</p>
+<section class="card"><div class="grid">
+<div><label for="objectif">Objectif de la journée</label><input id="objectif" inputmode="decimal" value="7,60"><div class="hint" id="objectifHM"></div></div>
+<div><label for="effectue">Déjà travaillé</label><input id="effectue" inputmode="decimal" value="5,25"><div class="hint" id="effectueHM"></div></div>
+<div class="wide"><label for="heure">Heure actuelle / heure de reprise</label><div class="timeRow"><input id="heure" type="time"><button id="refresh" class="refresh" type="button">↻ Actualiser</button></div><div class="hint">Actualiser remplace cette heure par l’heure actuelle de ton PC.</div></div>
+</div></section>
+<section class="card result"><div id="normal"><div class="soft">◷ Il te reste</div><div class="big" id="resteHM"></div><div class="soft" id="resteC"></div><div class="finish"><div class="soft">🏁 Heure de fin estimée</div><b id="fin"></b></div></div><div id="done" class="done" hidden>✓ Objectif atteint. Journée terminée 🎉</div><div class="bar"><div id="progress"></div></div><div class="soft" id="pct" style="margin-top:8px;font-size:14px"></div></section>
+<div class="note"><b>À retenir :</b> 0,25 h = 15 min · 0,50 h = 30 min · 0,75 h = 45 min.</div>
+</main><script>
+const $=id=>document.getElementById(id), objectif=$('objectif'), effectue=$('effectue'), heure=$('heure');
+function heureMaintenant(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+heure.value=heureMaintenant(); objectif.value=localStorage.getItem('objectif')||'7,60';
+function n(v){return Math.max(0,parseFloat(String(v).replace(',','.'))||0)}
+function hm(v){let h=Math.floor(v),m=Math.round((v-h)*60);if(m===60){h++;m=0}return `${h} h ${String(m).padStart(2,'0')} min`}
+function calc(){const o=n(objectif.value),e=n(effectue.value),r=Math.max(0,o-e),pct=o?Math.min(100,Math.round(e/o*100)):0;localStorage.setItem('objectif',objectif.value);$('objectifHM').textContent='Soit '+hm(o);$('effectueHM').textContent='Soit '+hm(e);$('resteHM').textContent=hm(r);$('resteC').textContent='soit '+r.toFixed(2).replace('.',',')+' heure(s) en centièmes';$('pct').textContent=pct+' % de l’objectif réalisé';$('progress').style.width=pct+'%';const done=e>=o&&o>0;$('done').hidden=!done;$('normal').hidden=done;let [h,m]=heure.value.split(':').map(Number);let total=(h||0)*60+(m||0)+Math.round(r*60);$('fin').textContent=String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')}
+$('refresh').addEventListener('click',()=>{heure.value=heureMaintenant();calc()});[objectif,effectue,heure].forEach(x=>x.addEventListener('input',calc));calc();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script></body></html>
